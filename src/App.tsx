@@ -40,7 +40,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   const { loading } = useAuth();
 
-  // Remove the loading check here since it's handled by individual routes
+
   return (
     <Routes>
       <Route path="/" element={<Home />} />

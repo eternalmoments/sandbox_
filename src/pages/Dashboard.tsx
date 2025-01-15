@@ -22,7 +22,8 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchSites = async () => {
       if (!user) return;
-
+      console.log(user.id);
+      
       try {
         const { data, error } = await supabase
           .from('sites')

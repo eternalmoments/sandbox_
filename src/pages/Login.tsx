@@ -36,34 +36,37 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-
+  
     try {
       console.log('INICIANDO LOGIN');
-    
+  
       // Chamada ao serviço de login
-      const response = await login(formData.email, formData.password);
-      console.log('Resposta do login:', response);
-    
-      // Atualiza o contexto de autenticação
+      const { user, token } = await login(formData.email, formData.password);
+  
+      console.log('Resposta do login:', user);
+  
+      // Armazenar o token no localStorage (ou cookies)
+      localStorage.setItem('authToken', token);
+  
+      // Atualizar o contexto de autenticação
       authLogin({
-        id: response.user.id,
-        email: response.user.email,
-        name: response.user.name,
-        subscriptionStatus: response.user.subscriptionStatus,
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        subscriptionStatus: user.subscriptionStatus,
       });
-    
-      setSuccess('Login realizado com sucesso!');
-      
-      console.log('Redirecionando para o dashboard...');
+  
+      // Redirecionar o usuário
       navigate('/dashboard');
+      console.log('Redirecionando para o dashboard...');
     } catch (err: any) {
       console.error('Erro ao fazer login:', err);
       setError(err?.message || 'Ocorreu um erro ao fazer login.');
     } finally {
       setLoading(false);
     }
-    
   };
+  
 
   return (
     <div className="min-h-screen relative">

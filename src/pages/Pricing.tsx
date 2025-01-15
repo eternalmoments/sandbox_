@@ -29,6 +29,8 @@ export default function Pricing() {
   const { isAuthenticated, user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+
 
   const handleStartNow = async (plan: typeof plans[0]) => {
     if (!isAuthenticated) {

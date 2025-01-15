@@ -30,6 +30,8 @@ export const createCheckoutSession = async ({
       throw new Error('No authentication token found');
     }
 
+    console.log(session.access_token);
+    
     // Create checkout session
     const response = await fetch('/api/payment/create-checkout-session', {
       method: 'POST',

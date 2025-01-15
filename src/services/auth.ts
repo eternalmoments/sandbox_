@@ -1,5 +1,7 @@
 import { supabase } from '../lib/supabase';
 import type { SignupCredentials, User } from '../types/auth';
+import axios from 'axios';
+
 
 export const signup = async ({ email, password, name }: SignupCredentials): Promise<void> => {
   try {
@@ -32,44 +34,27 @@ export const signup = async ({ email, password, name }: SignupCredentials): Prom
   }
 };
 
- export  const  login = async (email: string, password: string): Promise<{ user: User }> => {
-  console.log("Iniciando o login..."); // Log inicial
+export const login = async (email: string, password: string): Promise<{ user: User; token: string }> => {
+  console.log('Iniciando o login...'); // Log inicial
 
   try {
-    console.log("Tentando autenticar com Supabase...");
-    console.log("Credenciais fornecidas:", { email, password });
+    console.log('Enviando credenciais ao back-end...');
 
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    console.log("Resposta do Supabase (data):", authData ); // Log do retorno
-    console.log("Erro do Supabase (error):", authError); // Log do erro, se houver
+    // Fazendo a requisição ao endpoint do back-end
+    const response = await axios.post('/api/auth/login', { email, password });
 
-    if (authError) {
-      console.error("Erro retornado pelo Supabase:", authError);
-      throw authError;
-    }
+    // Obtendo os dados da resposta
+    const { token, user } = response.data;
 
-    if (!authData?.user) {
-      console.error("Usuário não encontrado no retorno do Supabase.");
-      throw new Error('Usuário não encontrado');
-    }
+    console.log('Usuário autenticado com sucesso:', user);
 
-    return {
-      user: {
-        id: authData.user.id,
-        email: authData.user.email!,
-        name: authData.user.user_metadata?.name || '',
-        subscriptionStatus: authData.user.user_metadata?.subscription_status || 'inactive',
-      },
-    };
+    return { user, token };
   } catch (error: any) {
-    console.error("Erro capturado no login:", error); // Captura erros inesperados
-    throw new Error(error.message || 'Erro ao fazer login');
+    console.error('Erro ao fazer login no back-end:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.error || 'Erro ao fazer login.');
   }
 };
+
 
 
 

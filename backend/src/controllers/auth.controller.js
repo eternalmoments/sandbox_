@@ -45,8 +45,10 @@ export const login = async (req, res) => {
 
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
+
+    console.log('LOGANDO DADOS DO LOGIN', authData);
 
     if (authError) throw authError;
 
@@ -59,7 +61,7 @@ export const login = async (req, res) => {
     const token = jwt.sign(
       { userId: authData.user.id },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '24h' },
     );
 
     res.json({
@@ -68,8 +70,8 @@ export const login = async (req, res) => {
         id: authData.user.id,
         email: authData.user.email,
         name: profile?.name || authData.user.user_metadata?.name,
-        subscriptionStatus: profile?.subscription_status
-      }
+        subscriptionStatus: profile?.subscription_status,
+      },
     });
   } catch (error) {
     console.error('Login error:', error);
