@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
-import profileRouter  from './routes/profileRouter.js'
+//import profileRouter  from './routes/profileRouter.js'
 
 dotenv.config();
 
@@ -19,7 +19,7 @@ app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/payment', paymentRoutes);
-app.use('/api/profile', profileRouter);
+//app.use('/api/profile', profileRouter);
 
 // Health check
 app.get('/health', (req, res) => {
