@@ -6,7 +6,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 export const createCheckoutSession = async (req, res) => {
   try {
     const { priceId, successUrl, cancelUrl, userId, mode } = req.body;
-
+    console.log("LOGANDO PRICEID",priceId);
+    
     // Get user profile
     const { data: profile } = await supabase
       .from('profiles')

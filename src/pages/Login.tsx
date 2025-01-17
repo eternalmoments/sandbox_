@@ -45,7 +45,8 @@ export default function Login() {
   
       console.log('Resposta do login:', user);
   
-      // Armazenar o token no localStorage (ou cookies)
+      console.log("TOKEN SALVO APÓS LOGIN", token);
+      
       localStorage.setItem('authToken', token);
   
       // Atualizar o contexto de autenticação

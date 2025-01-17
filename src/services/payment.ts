@@ -25,19 +25,23 @@ export const createCheckoutSession = async ({
     }
 
     // Get the current session
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) {
+    
+    
+    
+    let authenticationToken = localStorage.getItem('authToken');
+    console.log("LOGANDO TOKEN NO PAGAMENTO", authenticationToken);
+    if (!authenticationToken) {
       throw new Error('No authentication token found');
     }
 
-    console.log(session.access_token);
+   
     
     // Create checkout session
     const response = await fetch('/api/payment/create-checkout-session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`
+        'Authorization': `Bearer ${authenticationToken}`
       },
       body: JSON.stringify({
         priceId,
@@ -103,5 +107,36 @@ export const createPortalSession = async (customerId: string) => {
   } catch (error) {
     console.error('Portal session error:', error);
     throw new Error('Failed to access billing portal');
+  }
+};
+
+export const updateSubscriptionStatus = async (userId: string, status: string) => {
+  try {
+    let authenticationToken = localStorage.getItem('authToken');
+    if (!authenticationToken) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch('/api/profile/update-subscription', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authenticationToken}`
+      },
+      body: JSON.stringify({
+        userId,
+        status
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update subscription status');
+    }
+
+    console.log('Subscription status updated successfully');
+  } catch (error) {
+    console.error('Error updating subscription status:', error);
+    throw error;
   }
 };
