@@ -38,7 +38,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
-  const { loading } = useAuth();
+ // const { loading } = useAuth();
 
 
   return (
