@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/Authcontext';
 import StarBackground from '../components/StarBackground';
 import DashboardNavbar from '../components/DashboardNavbar';
 import ManageSubscription from '../components/ManageSubscription';
+import axios from 'axios';
+
 
 interface Site {
   id: string;
@@ -21,18 +22,18 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchSites = async () => {
-      if (!user) return;
-      console.log(user.id);
-      
-      try {
-        const { data, error } = await supabase
-          .from('sites')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+      if (!user) return; // Garante que o usuário está definido antes de fazer a request
+     
 
-        if (error) throw error;
-        setSites(data || []);
+      try {
+        console.log('URL', import.meta.env.VITE_BASE_URL_API);
+        const response = await axios.get(`${import.meta.env.VITE_BASE_URL_API}sites/getSitesByUser`, {
+          params: { user_id: user.id }, // Passa o user_id como query param
+        });
+
+        console.log('LOGANDO DADOS RETORNADOS NO DASHBOARD:', response.data);
+
+        setSites(response.data); // Atualiza os sites com os dados retornados
       } catch (error) {
         console.error('Error fetching sites:', error);
       } finally {

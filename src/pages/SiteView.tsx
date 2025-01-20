@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import axios from 'axios';
 import { useAuth } from '../contexts/Authcontext';
 import InteractiveStarBackground from '../components/InteractiveStarBackground';
 import RelationshipDuration from '../components/RelationshipDuration';
@@ -28,49 +28,30 @@ export default function SiteView() {
   useEffect(() => {
     const fetchSite = async () => {
       if (!id || !user) return;
-      
+  
       try {
-        const { data: siteData, error: siteError } = await supabase
-          .from('sites')
-          .select('id, title, meeting_date, star_chart_url')
-          .eq('id', id)
-          .eq('user_id', user.id)
-          .single();
-
-        if (siteError) throw siteError;
-        if (!siteData) throw new Error('Site not found');
-
-        const { data: photos, error: photosError } = await supabase
-          .from('photos')
-          .select('id, url, caption')
-          .eq('site_id', id)
-          .order('created_at', { ascending: true });
-
-        if (photosError) throw photosError;
-
-        const { data: messages, error: messagesError } = await supabase
-          .from('messages')
-          .select('id, content, position_x, position_y')
-          .eq('site_id', id)
-          .order('created_at', { ascending: true });
-
-        if (messagesError) throw messagesError;
-
-        setSite({
-          ...siteData,
-          photos: photos || [],
-          messages: messages || []
+        const response = await axios.get(`${import.meta.env.VITE_BASE_URL_API}sites/viewSite/${id}`, {
+          params: { user_id: user.id },
         });
-      } catch (err) {
+        
+        // Verifica se os dados retornaram corretamente
+        if (response.status !== 200) {
+          throw new Error(`Failed to fetch site: ${response.statusText}`);
+        }
+  
+        setSite(response.data);
+      } catch (err: any) {
         console.error('Error fetching site:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load site');
+        setError(err.response?.data?.message || err.message || 'Failed to load site');
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchSite();
   }, [id, user]);
+  
+  
 
   if (loading) {
     return (
