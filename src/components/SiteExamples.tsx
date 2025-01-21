@@ -1,38 +1,45 @@
-import { Star, Moon, Sparkles, Telescope, Compass } from 'lucide-react';
+import { Compass, Moon, Sparkles, Star, Telescope } from 'lucide-react';
 
 const examples = [
   {
     title: "Proposta estrelada",
-    date: "August 12, 2023",
-    preview: "https://images.unsplash.com/photo-1532978379173-523e16f371f9",
+    date: "Jan 12, 2025",
+    preview: "images/imagem-1.jpg",
     description: "Sob uma chuva de meteoros no campo",
     icon: Star
   },
   {
     title: "Praia enluarada",
-    date: "March 15, 2023",
-    preview: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
+    date: "Mar 15, 2024",
+    preview: "images/imagem-2.jpg",
     description: "Nosso primeiro beijo sob a lua cheia",
     icon: Moon
   },
   {
     title: "Aurora Boreal",
-    date: "September 23, 2023",
+    date: "Sep 23, 2024",
     preview: "https://images.unsplash.com/photo-1483086431886-3590a88317fe",
     description: "Dançando sob a aurora na Islândia",
     icon: Sparkles
   },
   {
     title: "Data do Observatório",
-    date: "July 8, 2023",
+    date: "July 8, 2024",
     preview: "https://images.unsplash.com/photo-1506318137071-a8e063b4bec0",
     description: "Onde descobrimos pela primeira vez o nosso amor pela astronomia",
     icon: Telescope
   },
   {
     title: "Observação das estrelas no deserto",
-    date: "May 20, 2023",
+    date: "May 20, 2024",
     preview: "https://images.unsplash.com/photo-1465101162946-4377e57745c3",
+    description: "Acampar sob o céu noturno mais claro",
+    icon: Compass
+  },
+  {
+    title: "Nosso primeiro acampamento",
+    date: "Dez 13, 2024",
+    preview: "images/imagem-4.jpg",
     description: "Acampar sob o céu noturno mais claro",
     icon: Compass
   }

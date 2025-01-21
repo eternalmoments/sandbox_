@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Calendar, Upload, MessageSquare, Plus, Trash2 } from 'lucide-react';
+import { Calendar, Plus, Trash2, Upload } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import StarBackground from '../components/StarBackground';
 import DashboardNavbar from '../components/DashboardNavbar';
 import PlacesAutocomplete from '../components/forms/PlacesAutocomplete';
-import { getStarChart } from '../services/astronomy';
-import { supabase } from '../lib/supabase';
+import StarBackground from '../components/StarBackground';
 import { useAuth } from '../contexts/Authcontext';
+import { supabase } from '../lib/supabase';
+import { getStarChart } from '../services/astronomy';
 
 interface FormData {
   title: string;
