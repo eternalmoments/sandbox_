@@ -7,6 +7,7 @@ import PlacesAutocomplete from '../components/forms/PlacesAutocomplete';
 import { getStarChart } from '../services/astronomy';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/Authcontext';
+import { updateSubscriptionStatus } from '../services/payment';
 
 interface FormData {
   title: string;
@@ -115,86 +116,47 @@ export default function CreateStory() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-
+  
     setLoading(true);
     setError('');
-
+  
     try {
-      // Get star chart
-      const { data: starChartData } = await getStarChart({
+      const { imageUrl } = await getStarChart({
         date: formData.skyDate,
         latitude: formData.location.latitude,
-        longitude: formData.location.longitude
+        longitude: formData.location.longitude,
       });
-
-      // Create site record
+    
+      console.log('Star Chart Image URL:', imageUrl);
+    
+      // Criação do registro do site
       const { data: site, error: siteError } = await supabase
         .from('sites')
-        .insert([{
-          user_id: user.id,
-          title: formData.title,
-          meeting_date: formData.relationshipStartDate,
-          star_chart_url: starChartData.imageUrl,
-          address: formData.location.address,
-          latitude: formData.location.latitude,
-          longitude: formData.location.longitude
-        }])
+        .insert([
+          {
+            user_id: user.id,
+            title: formData.title,
+            meeting_date: formData.relationshipStartDate,
+            star_chart_url: imageUrl, // Aqui você usa a URL correta
+            address: formData.location.address,
+            latitude: formData.location.latitude,
+            longitude: formData.location.longitude,
+          },
+        ])
         .select()
         .single();
-
+        navigate('/dashboard');
       if (siteError) throw siteError;
-
-      // Upload photos
-      const photoPromises = formData.photos.map(async (file) => {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const filePath = `${user.id}/${site.id}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('photos')
-          .upload(filePath, file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('photos')
-          .getPublicUrl(filePath);
-
-        return supabase
-          .from('photos')
-          .insert([{
-            site_id: site.id,
-            url: publicUrl,
-            caption: ''
-          }]);
-      });
-
-      await Promise.all(photoPromises);
-
-      // Add messages
-      const messagePromises = formData.messages
-        .filter(msg => msg.trim())
-        .map((content, index) => {
-          return supabase
-            .from('messages')
-            .insert([{
-              site_id: site.id,
-              content,
-              position_x: Math.random(),
-              position_y: Math.random()
-            }]);
-        });
-
-      await Promise.all(messagePromises);
-
-      navigate(`/sites/${site.id}`);
+    
     } catch (err) {
       console.error('Error creating story:', err);
       setError('Erro ao criar sua história. Por favor, tente novamente.');
-    } finally {
+    }
+     finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="min-h-screen">
