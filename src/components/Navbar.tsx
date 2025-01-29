@@ -1,4 +1,4 @@
-import { LogIn, Star, LogOut } from 'lucide-react';
+import { LogIn, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/Authcontext';
 

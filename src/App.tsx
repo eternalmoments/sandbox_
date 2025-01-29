@@ -1,16 +1,16 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/Authcontext';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/Authcontext';
+import Contact from './pages/Contact';
+import CreateStory from './pages/CreateStory';
+import Dashboard from './pages/Dashboard';
+import DeletePlan from './pages/DeletePlan';
 import Home from './pages/Home';
+import Login from './pages/Login';
+import Payment from './pages/Payment';
 import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
-import Contact from './pages/Contact';
 import SignUp from './pages/SignUp';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import CreateStory from './pages/CreateStory';
 import SiteView from './pages/SiteView';
-import Payment from './pages/Payment';
-import { useAuth } from './contexts/Authcontext';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -50,6 +50,8 @@ function AppRoutes() {
       <Route path="/signup" element={<SignUp />} />
       <Route path="/login" element={<Login />} />
       <Route path="/payment" element={<Payment />} />
+      <Route path="/delete" element={<DeletePlan />} />
+
       <Route 
         path="/dashboard" 
         element={
