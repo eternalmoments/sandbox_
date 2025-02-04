@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react';
+import axios from 'axios';
 import { Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/Authcontext';
-import StarBackground from '../components/StarBackground';
 import DashboardNavbar from '../components/DashboardNavbar';
 import ManageSubscription from '../components/ManageSubscription';
-import axios from 'axios';
-
+import StarBackground from '../components/StarBackground';
+import { useAuth } from '../contexts/Authcontext';
 
 interface Site {
   id: string;
@@ -23,17 +22,16 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchSites = async () => {
       if (!user) return; // Garante que o usuário está definido antes de fazer a request
-     
 
       try {
         console.log('URL', import.meta.env.VITE_BASE_URL_API);
         const response = await axios.get(`${import.meta.env.VITE_BASE_URL_API}sites/getSitesByUser`, {
-          params: { user_id: user.id }, // Passa o user_id como query param
+          params: { user_id: user.id },
         });
 
         console.log('LOGANDO DADOS RETORNADOS NO DASHBOARD:', response.data);
 
-        setSites(response.data); // Atualiza os sites com os dados retornados
+        setSites(response.data);
       } catch (error) {
         console.error('Error fetching sites:', error);
       } finally {
@@ -45,11 +43,11 @@ export default function Dashboard() {
   }, [user]);
 
   return (
-    <div className="min-h-screen">
+    <div className="relative min-h-screen">
       <StarBackground />
       <DashboardNavbar />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-12">
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-12 relative z-10">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-white">Minhas Histórias</h1>
           {user?.stripeCustomerId && <ManageSubscription />}
@@ -62,9 +60,9 @@ export default function Dashboard() {
             <p className="text-gray-300 mb-8">Você ainda não criou nenhuma história.</p>
             <Link
               to="/create-story"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity"
+              className="bg-purple-600 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-purple-500 transition inline-flex items-center justify-center"
+              style={{ margin: '0 auto' }}
             >
-              <Plus className="w-5 h-5" />
               Criar minha primeira história
             </Link>
           </div>
