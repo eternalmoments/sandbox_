@@ -38,7 +38,8 @@ export default function SiteView() {
         if (response.status !== 200) {
           throw new Error(`Failed to fetch site: ${response.statusText}`);
         }
-  
+        console.log(response.data);
+        
         setSite(response.data);
       } catch (err: any) {
         console.error('Error fetching site:', err);
