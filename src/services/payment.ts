@@ -29,6 +29,7 @@ export const createCheckoutSession = async ({
     
     
     let authenticationToken = localStorage.getItem('authToken');
+    console.log("LOGANDO ID DO USUARIO PAGAMENTO", authenticationToken);
     console.log("LOGANDO TOKEN NO PAGAMENTO", authenticationToken);
     if (!authenticationToken) {
       throw new Error('No authentication token found');
@@ -36,7 +37,8 @@ export const createCheckoutSession = async ({
 
    
     
-    // Create checkout session
+    console.log("LOGANDO USERID",userId);
+    
     const response = await fetch('/api/payment/create-checkout-session', {
       method: 'POST',
       headers: {
@@ -54,7 +56,10 @@ export const createCheckoutSession = async ({
 
     if (!response.ok) {
       const errorData = await response.json();
+      
       throw new Error(errorData.error || 'Failed to create checkout session');
+      
+      
     }
 
     const { sessionId } = await response.json();

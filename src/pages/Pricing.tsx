@@ -45,7 +45,8 @@ export default function Pricing() {
   
     setLoading(true);
     setError('');
-  
+    console.log("logando userID",user.id);
+    
     try {
       await createCheckoutSession({
         priceId: plan.priceId,

@@ -1,53 +1,46 @@
-import { supabase } from '../lib/supabase';
-import type { SignupCredentials, User } from '../types/auth';
 import axios from 'axios';
+import type { SignupCredentials, User } from '../types/auth';
 
+// Define a instância do axios com a URL base do .env
+const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_BASE_URL_API,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 export const signup = async ({ email, password, name }: SignupCredentials): Promise<void> => {
   try {
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Faz a requisição ao endpoint do back-end para criar o usuário
+    const response = await apiClient.post('/auth/signup', {
       email,
       password,
-      options: {
-        data: {
-          name,
-          subscription_status: 'inactive'
-        }
-      }
+      name,
     });
 
-    if (authError) {
-      if (authError.message.includes('already registered')) {
-        throw new Error('Este e-mail já está cadastrado');
-      }
-      throw authError;
-    }
-
-    if (!authData.user) {
-      throw new Error('Erro ao criar usuário');
-    }
-
+    console.log('Usuário criado com sucesso:', response.data);
     return;
   } catch (error: any) {
-    console.error('Signup error:', error);
-    throw new Error(error.message || 'Erro ao criar conta');
+    console.error('Erro ao fazer signup no back-end:', error.response?.data || error.message);
+
+    if (error.response?.data?.error?.includes('already registered')) {
+      throw new Error('Este e-mail já está cadastrado');
+    }
+
+    throw new Error(error.response?.data?.error || 'Erro ao criar conta.');
   }
 };
 
 export const login = async (email: string, password: string): Promise<{ user: User; token: string }> => {
-  console.log('Iniciando o login...'); // Log inicial
+  console.log('Iniciando o login...');
 
   try {
-    console.log('Enviando credenciais ao back-end...');
+    // Faz a requisição ao endpoint do back-end
+    const response = await apiClient.post('/auth/login', { email, password });
 
-    // Fazendo a requisição ao endpoint do back-end
-    const response = await axios.post('/api/auth/login', { email, password });
-
-    // Obtendo os dados da resposta
     const { token, user } = response.data;
 
     console.log('Usuário autenticado com sucesso:', user);
-
     return { user, token };
   } catch (error: any) {
     console.error('Erro ao fazer login no back-end:', error.response?.data || error.message);
@@ -55,19 +48,13 @@ export const login = async (email: string, password: string): Promise<{ user: Us
   }
 };
 
-
-
-
-
-
-
-
 export const logout = async (): Promise<void> => {
   try {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    // Faz uma requisição ao endpoint de logout, se houver
+    const response = await apiClient.post('/auth/logout');
+    console.log('Logout realizado com sucesso:', response.data);
   } catch (error: any) {
-    console.error('Logout error:', error);
-    throw new Error(error.message || 'Erro ao fazer logout');
+    console.error('Erro ao fazer logout:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.error || 'Erro ao fazer logout.');
   }
 };

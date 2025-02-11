@@ -1,8 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Calendar, Upload, Trash2, Plus } from 'lucide-react';
-import { Calendar, Plus, Trash2, Upload } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Calendar, Upload, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardNavbar from '../components/DashboardNavbar';
 import PlacesAutocomplete from '../components/forms/PlacesAutocomplete';
@@ -34,8 +32,10 @@ export default function CreateStory() {
     skyDate: '',
     relationshipStartDate: '',
     location: { latitude: 0, longitude: 0, address: '' },
-    photos: []
+    photos: [],
+    messages: [] // Adicione esta linha
   });
+  
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [error, setError] = useState('');
 
