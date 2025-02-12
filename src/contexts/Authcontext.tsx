@@ -29,19 +29,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     navigate('/login'); // Redireciona para a tela de login
   };
 
-  const fetchUserProfile = async (userId: string): Promise<User | null> => {
+  const fetchUserProfile = async (userId: string): Promise<User> => {
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  
-      if (sessionError) {
-        console.error('Erro ao obter sessão:', sessionError);
-        throw sessionError;
-      }
-  
       const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('name, subscription_status, stripe_customer_id')
-        .eq('id', userId)
+        .from('subscriptions')
+        .select('subscription_status, stripe_customer_id')
+        .eq('user_id', userId)
         .single();
   
       if (profileError) {
@@ -49,20 +42,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw profileError;
       }
   
-      return profile
-        ? {
-            id: userId,
-            email: session?.user?.email || '',
-            name: profile.name || '',
-            subscriptionStatus: profile.subscription_status,
-            stripeCustomerId: profile.stripe_customer_id,
-          }
-        : null;
+      return {
+        id: userId,
+        subscriptionStatus: profile?.subscription_status ?? 'inactive',
+        stripeCustomerId: profile?.stripe_customer_id ?? '', 
+      };
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);
-      return null;
+      return {
+        id: userId,
+        subscriptionStatus: 'inactive',
+        stripeCustomerId: '',
+      }; 
     }
   };
+  
   
 
   useEffect(() => {

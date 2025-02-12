@@ -1,7 +1,5 @@
 export interface User {
   id: string;
-  name: string;
-  email: string;
   subscriptionStatus?: string;
   stripeCustomerId?: string;
 }
