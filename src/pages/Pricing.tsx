@@ -21,7 +21,8 @@ const plans = [
       "Responsivo móvel",
       "Suporte 24/7"
     ],
-    priceId: import.meta.env.VITE_STRIPE_PRICE_ID
+    priceId: import.meta.env.VITE_STRIPE_PRICE_ID,
+    subscriptionPriceId:import.meta.env.VITE_STRIPE_SUBSCRIPTION_PRICE_ID,
   }
 ];
 
@@ -50,10 +51,11 @@ export default function Pricing() {
     try {
       await createCheckoutSession({
         priceId: plan.priceId,
+        subscriptionPriceId:plan.subscriptionPriceId,
         successUrl: `${window.location.origin}/dashboard`,
         cancelUrl: `${window.location.origin}/pricing`,
         userId: user.id,
-        mode: 'payment'
+        mode: 'subscription'
       });
   
       // Atualizar o status de assinatura do usuário

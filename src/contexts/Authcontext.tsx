@@ -31,22 +31,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserProfile = async (userId: string): Promise<User> => {
     try {
-      const { data: profile, error: profileError } = await supabase
+      const { data: subscription, error: subscriptionError } = await supabase
         .from('subscriptions')
-        .select('subscription_status, stripe_customer_id')
+        .select('status, stripe_customer_id')
         .eq('user_id', userId)
         .single();
   
-      if (profileError) {
-        console.error('Erro ao buscar perfil:', profileError);
-        throw profileError;
+      if (subscriptionError) {
+        console.error('Erro ao buscar perfil:', subscriptionError);
+        throw subscriptionError;
       }
-  
+      console.log(subscription?.status);
       return {
         id: userId,
-        subscriptionStatus: profile?.subscription_status ?? 'inactive',
-        stripeCustomerId: profile?.stripe_customer_id ?? '', 
+        subscriptionStatus: subscription?.status ?? 'inactive',
+        stripeCustomerId: subscription?.stripe_customer_id ?? '', 
       };
+
+      
+      
+      
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);
       return {

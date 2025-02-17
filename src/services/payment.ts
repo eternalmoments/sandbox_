@@ -5,6 +5,7 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 interface CheckoutSessionParams {
   priceId: string;
+  subscriptionPriceId:string,
   successUrl: string;
   cancelUrl: string;
   userId: string;
@@ -13,6 +14,7 @@ interface CheckoutSessionParams {
 
 export const createCheckoutSession = async ({
   priceId,
+  subscriptionPriceId,
   successUrl,
   cancelUrl,
   userId,
@@ -47,6 +49,7 @@ export const createCheckoutSession = async ({
       },
       body: JSON.stringify({
         priceId,
+        subscriptionPriceId,
         successUrl,
         cancelUrl,
         userId,

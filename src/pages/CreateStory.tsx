@@ -1,14 +1,12 @@
-
 import { useState, useEffect } from 'react';
-import { Calendar, Upload, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardNavbar from '../components/DashboardNavbar';
-import PlacesAutocomplete from '../components/forms/PlacesAutocomplete';
 import StarBackground from '../components/StarBackground';
 import { useAuth } from '../contexts/Authcontext';
 import { uploadPhoto } from '../services/photo';
 import { supabase } from '../lib/supabase';
 import { getStarChart } from '../services/astronomy';
+import { fetchUserSubscription } from '../services/subscriptions';
 
 interface FormData {
   title: string;
@@ -25,25 +23,47 @@ interface FormData {
 
 export default function CreateStory() {
   const navigate = useNavigate();
-  const { user, hasActivePlan } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     title: '',
     skyDate: '',
     relationshipStartDate: '',
     location: { latitude: 0, longitude: 0, address: '' },
     photos: [],
-    messages: [] // Adicione esta linha
+    messages: [],
   });
-  
+
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [error, setError] = useState('');
 
+  // Verifica a assinatura do usuário antes de permitir criar a história
   useEffect(() => {
-    if (!hasActivePlan) {
-      navigate('/pricing');
-    }
-  }, [hasActivePlan, navigate]);
+    const checkSubscription = async () => {
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+
+      try {
+        const subscription = await fetchUserSubscription(user.id);
+
+        if (!subscription || subscription.status !== 'active') {
+          navigate('/pricing'); // Redireciona para a página de planos se a assinatura não estiver ativa
+        } else {
+          setHasActiveSubscription(true);
+        }
+      } catch (err) {
+        console.error('Erro ao verificar assinatura:', err);
+        setError('Erro ao verificar assinatura. Tente novamente.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkSubscription();
+  }, [user, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -57,8 +77,8 @@ export default function CreateStory() {
         location: {
           latitude: place.geometry.location.lat(),
           longitude: place.geometry.location.lng(),
-          address: place.formatted_address || ''
-        }
+          address: place.formatted_address || '',
+        },
       }));
     }
   };
@@ -70,17 +90,13 @@ export default function CreateStory() {
       return;
     }
 
-    const newPhotos = files.map(file => ({
-      file,
-      caption: ''
-    }));
+    const newPhotos = files.map(file => ({ file, caption: '' }));
 
     setFormData(prev => ({
       ...prev,
-      photos: [...prev.photos, ...newPhotos]
+      photos: [...prev.photos, ...newPhotos],
     }));
 
-    // Criar URLs para preview
     const newPreviewUrls = files.map(file => URL.createObjectURL(file));
     setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
   };
@@ -90,16 +106,16 @@ export default function CreateStory() {
       ...prev,
       photos: prev.photos.map((photo, i) =>
         i === index ? { ...photo, caption: value } : photo
-      )
+      ),
     }));
   };
 
   const removePhoto = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index)
+      photos: prev.photos.filter((_, i) => i !== index),
     }));
-    
+
     URL.revokeObjectURL(previewUrls[index]);
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
@@ -107,10 +123,10 @@ export default function CreateStory() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-  
+
     setLoading(true);
     setError('');
-  
+
     try {
       // Gerar o Star Chart
       const { imageUrl } = await getStarChart({
@@ -133,11 +149,11 @@ export default function CreateStory() {
         }])
         .select()
         .single();
-  
+
       if (siteError) throw siteError;
 
-      console.log("LOGANDO ID DO SITE",site.id);
-      
+      console.log('LOGANDO ID DO SITE', site.id);
+
       const photoUploadPromises = formData.photos.map(async ({ file, caption }) => {
         const result = await uploadPhoto({ siteId: site.id, file });
         return supabase
@@ -154,6 +170,14 @@ export default function CreateStory() {
       setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-white">Verificando assinatura...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -187,90 +211,6 @@ export default function CreateStory() {
                   required
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Data do Céu
-                </label>
-                <div className="flex items-center gap-2">
-                  <Calendar className="text-gray-400" />
-                  <input
-                    type="datetime-local"
-                    name="skyDate"
-                    value={formData.skyDate}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Data de Início do Relacionamento
-                </label>
-                <div className="flex items-center gap-2">
-                  <Calendar className="text-gray-400" />
-                  <input
-                    type="date"
-                    name="relationshipStartDate"
-                    value={formData.relationshipStartDate}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Localização
-                </label>
-                <PlacesAutocomplete onPlaceSelect={handlePlaceSelect} />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-            <h2 className="text-xl font-semibold text-white mb-4">Fotos</h2>
-            <div className="space-y-4">
-              {formData.photos.map((photo, index) => (
-                <div key={index} className="flex items-center gap-4">
-                  <img
-                    src={previewUrls[index]}
-                    alt={`Foto ${index + 1}`}
-                    className="w-32 h-32 object-cover rounded-lg"
-                  />
-                  <textarea
-                    value={photo.caption}
-                    onChange={(e) => handleCaptionChange(index, e.target.value)}
-                    placeholder="Adicione uma legenda"
-                    className="flex-1 px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removePhoto(index)}
-                    className="p-2 bg-red-500 rounded-full text-white"
-                  >
-                    <Trash2 />
-                  </button>
-                </div>
-              ))}
-              <label className="flex items-center justify-center w-full h-48 border-2 border-dashed border-gray-700 rounded-lg cursor-pointer hover:border-purple-500 transition-colors">
-                <div className="text-center">
-                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                  <span className="mt-2 block text-sm font-medium text-gray-300">
-                    Adicionar foto
-                  </span>
-                </div>
-                <input
-                  type="file"
-                  onChange={handlePhotoChange}
-                  accept="image/*"
-                  className="hidden"
-                  multiple
-                />
-              </label>
             </div>
           </div>
 
