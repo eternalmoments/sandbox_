@@ -18,15 +18,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [hasActivePlan, setHasActivePlan] = useState(false);
-  const [loading, setLoading] = useState(true); // Inicializado como `true` para indicar carregamento inicial
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const resetAuth = () => {
     setUser(null);
     setHasActivePlan(false);
     setLoading(false);
-    localStorage.clear();
-    navigate('/login'); // Redireciona para a tela de login
+    localStorage.removeItem('authUser');
+    navigate('/login');
   };
 
   const fetchUserProfile = async (userId: string): Promise<User> => {
@@ -41,51 +41,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('Erro ao buscar perfil:', subscriptionError);
         throw subscriptionError;
       }
-      console.log(subscription?.status);
+
       return {
         id: userId,
         subscriptionStatus: subscription?.status ?? 'inactive',
-        stripeCustomerId: subscription?.stripe_customer_id ?? '', 
+        stripeCustomerId: subscription?.stripe_customer_id ?? '',
       };
-
-      
-      
-      
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);
       return {
         id: userId,
         subscriptionStatus: 'inactive',
         stripeCustomerId: '',
-      }; 
+      };
     }
   };
-  
-  
 
   useEffect(() => {
-    let mounted = true;
-
     const checkSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
 
-        if (error) throw error;
-
-        if (session?.user && mounted) {
-          const userProfile = await fetchUserProfile(session.user.id);
-
-          if (userProfile && mounted) {
-            setUser(userProfile);
-            setHasActivePlan(userProfile.subscriptionStatus === 'active');
-          }
+      if (session?.user) {
+        console.log("Usuário autenticado após retorno do Stripe:", session.user);
+        
+        const userProfile = await fetchUserProfile(session.user.id);
+        if (userProfile) {
+          setUser(userProfile);
+          setHasActivePlan(userProfile.subscriptionStatus === 'active');
+          localStorage.setItem('authUser', JSON.stringify(userProfile));
         }
-      } catch (error) {
-        console.error('Erro ao verificar sessão:', error);
-        resetAuth();
-      } finally {
-        if (mounted) setLoading(false);
+      } else {
+        // Verifica se há um usuário salvo no localStorage e restaura os dados
+        const storedUser = localStorage.getItem('authUser');
+        if (storedUser) {
+          const parsedUser: User = JSON.parse(storedUser);
+          setUser(parsedUser);
+          setHasActivePlan(parsedUser.subscriptionStatus === 'active');
+        } else {
+          resetAuth();
+        }
       }
+
+      setLoading(false);
     };
 
     checkSession();
@@ -98,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (userProfile) {
             setUser(userProfile);
             setHasActivePlan(userProfile.subscriptionStatus === 'active');
+            localStorage.setItem('authUser', JSON.stringify(userProfile));
             navigate('/dashboard');
           }
         });
@@ -105,7 +104,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate]);
@@ -113,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const handleLogin = (userData: User) => {
     setUser(userData);
     setHasActivePlan(userData.subscriptionStatus === 'active');
+    localStorage.setItem('authUser', JSON.stringify(userData));
     navigate('/dashboard');
   };
 

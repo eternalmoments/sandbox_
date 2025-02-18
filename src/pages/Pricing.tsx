@@ -21,8 +21,41 @@ const plans = [
       "Responsivo móvel",
       "Suporte 24/7"
     ],
-    priceId: import.meta.env.VITE_STRIPE_PRICE_ID,
-    subscriptionPriceId:import.meta.env.VITE_STRIPE_SUBSCRIPTION_PRICE_ID,
+    priceId: import.meta.env.VITE_STRIPE_PRICE_ID_1,
+    subscriptionPriceId: import.meta.env.VITE_STRIPE_SUBSCRIPTION_PRICE_ID
+  },
+  {
+    id: 'premium',
+    name: 'Plano Premium',
+    price: 49.99,
+    maintenance: 29.99,
+    pages: 3,
+    features: [
+      "3 Histórias de amor",
+      "Mapa estelar interativo",
+      "Mensagens personalizadas",
+      "Galeria de fotos ilimitada",
+      "Suporte premium 24/7"
+    ],
+    priceId: import.meta.env.VITE_STRIPE_PRODUCT_2,
+    subscriptionPriceId: import.meta.env.VITE_STRIPE_SUBSCRIPTION_PRICE_ID
+  },
+  {
+    id: 'exclusive',
+    name: 'Plano Exclusivo',
+    price: 79.99,
+    maintenance: 39.99,
+    pages: 5,
+    features: [
+      "5 Histórias de amor",
+      "Mapa estelar interativo",
+      "Mensagens personalizadas",
+      "Galeria de fotos ilimitada",
+      "Página personalizada com domínio próprio",
+      "Suporte VIP 24/7"
+    ],
+    priceId: import.meta.env.VITE_STRIPE_PRODUCT_3,
+    subscriptionPriceId: import.meta.env.VITE_STRIPE_SUBSCRIPTION_PRICE_ID
   }
 ];
 
@@ -33,7 +66,7 @@ export default function Pricing() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const handleStartNow = async (plan: typeof plans[0]) => {
+  const handleCheckout = async (plan: typeof plans[0], mode: 'one-time' | 'subscription') => {
     if (!isAuthenticated) {
       navigate('/signup');
       return;
@@ -44,24 +77,27 @@ export default function Pricing() {
       return;
     }
   
+    // 🔹 Salvar usuário no localStorage antes do checkout
+    localStorage.setItem('authUser', JSON.stringify(user));
+  
     setLoading(true);
     setError('');
-    console.log("logando userID",user.id);
-    
+    console.log('Iniciando checkout para userID:', user.id);
+  
     try {
       await createCheckoutSession({
-        priceId: plan.priceId,
-        subscriptionPriceId:plan.subscriptionPriceId,
+        priceId: mode === 'one-time' ? plan.priceId : plan.subscriptionPriceId,
         successUrl: `${window.location.origin}/dashboard`,
         cancelUrl: `${window.location.origin}/pricing`,
         userId: user.id,
-        mode: 'subscription'
+        mode: mode === 'one-time' ? 'payment' : 'subscription'
       });
   
-      // Atualizar o status de assinatura do usuário
-      await updateSubscriptionStatus(user.id, 'active');
+      if (mode === 'subscription') {
+        await updateSubscriptionStatus(user.id, 'active');
+      }
     } catch (error) {
-      console.error('Payment error:', error);
+      console.error('Erro no pagamento:', error);
       setError('Falha ao processar pagamento. Por favor, tente novamente.');
     } finally {
       setLoading(false);
@@ -127,39 +163,21 @@ export default function Pricing() {
                     </li>
                   ))}
                 </ul>
-                <div className="mt-8">
+                <div className="mt-8 space-y-4">
                   <button
-                    onClick={() => handleStartNow(plan)}
+                    onClick={() => handleCheckout(plan, 'one-time')}
                     disabled={loading}
-                    className="w-full px-6 py-4 text-lg leading-6 font-semibold rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 flex items-center justify-center"
+                    className="w-full px-6 py-4 text-lg font-semibold rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-opacity focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 flex items-center justify-center"
                   >
-                    {loading ? (
-                      <>
-                        <svg
-                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        Processando...
-                      </>
-                    ) : (
-                      'Comece agora'
-                    )}
+                    {loading ? 'Processando...' : 'Comprar Pagamento Único'}
+                  </button>
+
+                  <button
+                    onClick={() => handleCheckout(plan, 'subscription')}
+                    disabled={loading}
+                    className="w-full px-6 py-4 text-lg font-semibold rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 flex items-center justify-center"
+                  >
+                    {loading ? 'Processando...' : 'Comprar com Assinatura'}
                   </button>
                 </div>
                 <div className="mt-6 text-center">
