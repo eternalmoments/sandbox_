@@ -1,6 +1,6 @@
 export const fetchUserSubscription = async (userId: string) => {
     try {
-      const response = await fetch(`/api/subscriptions/${userId}`);
+      const response = await fetch(`/api/subs/get_sub_by_user/${userId}`);
       
       if (!response.ok) {
         throw new Error('Erro ao buscar assinatura');
