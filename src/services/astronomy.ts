@@ -7,10 +7,14 @@ interface StarChartParams {
   longitude: number;
 }
 
+
+
 export const getStarChart = async ({ date, latitude, longitude }: StarChartParams) => {
-  const response = await axios.post('/star_chart/star-chart', { date, latitude, longitude });
-  console.log(response);
-  
+  console.log("LOGANDO API",import.meta.env.VITE_BASE_URL_API);
+  const response = await axios.post(
+    `${import.meta.env.VITE_BASE_URL_API}star_chart/star-chart`,
+    { date, latitude, longitude }
+  );
   return response.data;
 };
 

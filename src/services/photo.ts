@@ -1,3 +1,4 @@
+import { Import } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface UploadPhotoParams {
@@ -22,7 +23,7 @@ export const uploadPhoto = async ({ siteId, file }: UploadPhotoParams) => {
     formData.append("siteId", siteId);
 
     // Chama a API do back-end para upload da foto
-    const response = await fetch('/api/photos/upload_photos', {
+    const response = await fetch(`${import.meta.env.VITE_BASE_URL_API}photos/upload_photos`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${authToken}`
