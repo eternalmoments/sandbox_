@@ -10,7 +10,6 @@ interface AuthContextType {
   isAuthenticated: boolean;
   hasActivePlan: boolean;
   loading: boolean;
-  resetAuth: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,83 +20,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const resetAuth = () => {
-    setUser(null);
-    setHasActivePlan(false);
-    setLoading(false);
-    localStorage.removeItem('authUser');
-    navigate('/login');
-  };
-
-  const fetchUserProfile = async (userId: string): Promise<User> => {
+  const fetchUserProfile = async (userId: string): Promise<User | null> => {
     try {
-      const { data: subscription, error: subscriptionError } = await supabase
+      const { data, error } = await supabase
         .from('subscriptions')
         .select('status, stripe_customer_id')
         .eq('user_id', userId)
         .single();
-  
-      if (subscriptionError) {
-        console.error('Erro ao buscar perfil:', subscriptionError);
-        throw subscriptionError;
-      }
+
+      if (error) throw error;
 
       return {
         id: userId,
-        subscriptionStatus: subscription?.status ?? 'inactive',
-        stripeCustomerId: subscription?.stripe_customer_id ?? '',
+        subscriptionStatus: data?.status ?? 'inactive',
+        stripeCustomerId: data?.stripe_customer_id ?? '',
       };
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);
-      return {
-        id: userId,
-        subscriptionStatus: 'inactive',
-        stripeCustomerId: '',
-      };
+      return null;
     }
   };
 
   useEffect(() => {
     const checkSession = async () => {
-      setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
 
-      if (session?.user) {
-        console.log("Usuário autenticado após retorno do Stripe:", session.user);
-        
+        if (error) throw error;
+        if (!session?.user) {
+          setLoading(false);
+          return;
+        }
+
         const userProfile = await fetchUserProfile(session.user.id);
         if (userProfile) {
           setUser(userProfile);
           setHasActivePlan(userProfile.subscriptionStatus === 'active');
-          localStorage.setItem('authUser', JSON.stringify(userProfile));
         }
-      } else {
-        // Verifica se há um usuário salvo no localStorage e restaura os dados
-        const storedUser = localStorage.getItem('authUser');
-        if (storedUser) {
-          const parsedUser: User = JSON.parse(storedUser);
-          setUser(parsedUser);
-          setHasActivePlan(parsedUser.subscriptionStatus === 'active');
-        } else {
-          resetAuth();
-        }
+      } catch (error) {
+        console.error('Erro ao verificar sessão:', error);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
-        resetAuth();
+        setUser(null);
+        setHasActivePlan(false);
+        navigate('/login');
       } else if (event === 'SIGNED_IN' && session?.user) {
         fetchUserProfile(session.user.id).then((userProfile) => {
           if (userProfile) {
             setUser(userProfile);
             setHasActivePlan(userProfile.subscriptionStatus === 'active');
-            localStorage.setItem('authUser', JSON.stringify(userProfile));
-            navigate('/dashboard');
           }
         });
       }
@@ -111,37 +89,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const handleLogin = (userData: User) => {
     setUser(userData);
     setHasActivePlan(userData.subscriptionStatus === 'active');
-    localStorage.setItem('authUser', JSON.stringify(userData));
-    navigate('/dashboard');
   };
 
   const handleLogout = async () => {
-    try {
-      setLoading(true);
-      await supabase.auth.signOut();
-      resetAuth();
-    } catch (error) {
-      console.error('Erro ao deslogar:', error);
-    } finally {
-      setLoading(false);
-    }
+    await supabase.auth.signOut();
+    setUser(null);
+    setHasActivePlan(false);
+    navigate('/');
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        login: handleLogin,
-        logout: handleLogout,
-        isAuthenticated: !!user,
-        hasActivePlan,
-        loading,
-        resetAuth,
-      }}
-    >
+    <AuthContext.Provider value={{ user, login: handleLogin, logout: handleLogout, isAuthenticated: !!user, hasActivePlan, loading }}>
       {loading ? (
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+          <p className="text-white">Carregando...</p>
         </div>
       ) : (
         children
@@ -152,8 +113,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
-  }
+  if (!context) throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   return context;
 };
