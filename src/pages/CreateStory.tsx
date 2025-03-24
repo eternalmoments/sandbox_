@@ -248,7 +248,7 @@ export default function CreateStory() {
   </div>
 ))}
 
-            <label className="flex items-center justify-center w-full h-48 border-2 border-dashed border-gray-700 rounded-lg cursor-pointer hover:border-purple-500 transition-colors">
+              <label className="flex items-center justify-center w-full h-48 border-2 border-dashed border-gray-700 rounded-lg cursor-pointer hover:border-purple-500 transition-colors">
               <div className="text-center">
                 <Upload className="mx-auto h-12 w-12 text-gray-400" />
                 <span className="mt-2 block text-sm font-medium text-gray-300">
