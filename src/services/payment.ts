@@ -41,7 +41,7 @@ export const createCheckoutSession = async ({
     
     console.log("LOGANDO USERID",userId);
     
-    const response = await fetch('/api/payment/create-checkout-session', {
+    const response = await fetch(`${import.meta.env.VITE_BASE_URL_API}payment/create-checkout-session`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ export const createPortalSession = async (customerId: string) => {
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch('/api/payment/create-portal-session', {
+    const response = await fetch(`${import.meta.env.VITE_BASE_URL_API}payment/create-portal-session`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -125,7 +125,7 @@ export const updateSubscriptionStatus = async (userId: string, status: string) =
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch('/api/profile/update-subscription', {
+    const response = await fetch(`${import.meta.env.VITE_BASE_URL_API}profile/update-subscription`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
